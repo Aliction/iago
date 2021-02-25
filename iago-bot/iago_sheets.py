@@ -1,5 +1,6 @@
-import re
+import re, logging
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from iago_chat import *
 
 class iago_sheets_service:
@@ -22,18 +23,25 @@ def extract_data(user):
   sheets_service = build(SHEETS_API, SHEETS_API_VERSION, credentials=user.g_creds, cache_discovery=False)
   sheet_url = user.task.sheet_url
   spreadsheet_id = sheet_url.split('/')[5]
-  range_name = "'Iago'"
+  range_name = user.task.data_range
   sheet = sheets_service.spreadsheets()
-  result = sheet.values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
-  data = result.get('values', [])
-  headers = data[0]
-  header_count = len(headers)
-  if user.task.subject_check or "Subject".lower() in (header.lower() for header in headers): # TODO: Check for lower and upper case
-      user.task.subject_check = True
-  if user.task.message_check or "Message".lower() in (header.lower() for header in headers): # TODO: Check for lower and upper case
-      user.task.message_check = True
-  values = data[1:]
-  return headers, data
+  try:
+    result = sheet.values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
+    data = result.get('values', [])
+    headers = data[0]
+    header_count = len(headers)
+    if user.task.subject_check or "Subject".lower() in (header.lower() for header in headers): # TODO: Check for lower and upper case
+        user.task.subject_check = True
+    if user.task.message_check or "Message".lower() in (header.lower() for header in headers): # TODO: Check for lower and upper case
+        user.task.message_check = True
+    values = data[1:]
+    return headers, data
+  except HttpError as err:
+    if str(err).find("Unable to parse range:"):
+      user.task.data_range_check = False
+      raise ValueError("Incorrect sheet name " + user.task.data_range) 
+    else:
+      logging.info(err)
 
 def patternize_headers(headers):
   patterns=[]
@@ -63,7 +71,7 @@ def update_sheet(user):
   sheets_service = build(SHEETS_API, SHEETS_API_VERSION, credentials=user.g_creds, cache_discovery=False)
   sheet_url = user.task.sheet_url
   spreadsheet_id = sheet_url.split('/')[5]
-  range_name = "'Iago'"
+  range_name = user.task.data_range
   sheet = sheets_service.spreadsheets()
   if not ("Subject".lower() in (header.lower() for header in user.task.headers)):
       user.task.headers.append("Subject")

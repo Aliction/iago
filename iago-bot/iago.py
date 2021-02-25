@@ -35,6 +35,10 @@ FAILURE_AUTH_PAGE = ''
 CHAT_SERVICE_URL = None
 
 def collect_missing_input(user):
+  if not user.task.data_range_check:
+    user.task.context = Context.DATA_RANGE
+    send_message(user, "I couldn't find a sheet with name `" + user.task.data_range + "`, Can you provide the sheet name here?")
+    return
   if not user.task.subject_check:
     user.task.context = Context.SUBJECT
     send_message(user, "I couldn't find the mail subject in the input data can you send it here?")
@@ -45,7 +49,11 @@ def collect_missing_input(user):
     return
 
 def process_task(user):
-  analyze_input_sheet(user)
+  try:
+    analyze_input_sheet(user)
+  except ValueError:
+    logging.info("Value Error: Data Range")
+  logging.info("A user has triggered a task of type " + str(user.task.type))
   if user.task.check_prereqs():
     send_message(user, "Processing the sheet ...")
     if update_sheet(user):
@@ -122,7 +130,7 @@ def handle_message(event):
       return Card.menu
   if user.task is None:
       user_first_name = sender['displayName'].split()[0]
-      headers =  {'Content-Type': 'application/json'}
+      headers = {'Content-Type': 'application/json'}
       data = json.dumps({ "message": message })
       r = requests.post(CHAT_SERVICE_URL, headers=headers, data=data)
       text = {'text' : json.loads(r.text)['response']}
@@ -130,6 +138,11 @@ def handle_message(event):
   elif user.task.context == Context.TASK:
       user_first_name = sender['displayName'].split()[0]
       text = {'text' : 'Hello ' + user_first_name + ', send me a sheet to start my work'}
+  elif user.task.context == Context.DATA_RANGE:
+      user.task.data_range = message
+      user.task.context = Context.TASK
+      _thread.start_new_thread(process_task,(user,))
+      text = {'text' : 'Checking if we can process with sheet name `' + message + '`' }
   elif user.task.context == Context.SUBJECT:
       action = "confirm_subject"
       confirmation_item = "Subject"

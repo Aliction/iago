@@ -8,6 +8,7 @@ class Context(Enum):
     SUBJECT = 2     # context about collecting mail subject
     MESSAGE = 3     # context about collecting mail message (body)
     ATTACHMENT = 4  # context about collecting attachments, not yet used.
+    DATA_RANGE = 5  # context about collecting data range or currently sheet name as our range is the whole sheet.
 
 class Type(Enum):
     """ This is an enumeration class for task types """
@@ -47,6 +48,8 @@ class Task:
         self._creation_date = datetime.now()
         self._sheet_url = sheet_url
         self._sheet_check = True
+        self._data_range = "'Iago'"
+        self._data_range_check = True
         self._subject = ""
         self._subject_check = False
         self._message = ""
@@ -80,6 +83,24 @@ class Task:
     @property
     def sheet_url(self):
         return self._sheet_url
+
+    @property
+    def data_range_check(self):
+        return self._data_range_check
+
+    @data_range_check.setter
+    def data_range_check(self, data_range_check):
+        self._data_range_check = data_range_check
+
+    @property
+    def data_range(self):
+        return self._data_range
+
+    @data_range.setter
+    def data_range(self, data_range):
+        self._data_range_check = True
+        self._data_range = data_range
+        return self.check_prereqs()
 
     @property
     def subject_check(self):
@@ -123,7 +144,7 @@ class Task:
         return True if lifetime > self.MAX_LIFETIME else False
     
     def check_prereqs(self):
-        prereqs_fulfilled = self._sheet_check and self._subject_check and self._message_check
+        prereqs_fulfilled = self._sheet_check and self._subject_check and self._message_check and self._data_range_check
         if(prereqs_fulfilled):
             self.context = Context.TASK
             self._status = Status.INPROGRESS
