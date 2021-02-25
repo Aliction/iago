@@ -1,0 +1,18 @@
+iago-bot v1.2
+Use chat service for general chatting
+Change desired Sheet Range from 'Sheet1' to 'Iago'
+
+iago-bot v1.1
+Update PyJWT to 2.x -> lead to mandatory algorith parameter in jwt.decode function line #211
+
+iago-bot v1.0
+Initial containerized release
+
+iago-chatter v1.0
+Initial containerized release
+
+iago-drafter v1.0
+Initial containerized release
+
+iago-sender v1.0
+Initial containerized release

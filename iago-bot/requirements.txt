@@ -1,0 +1,10 @@
+flask
+flask_restful
+pyjwt
+requests
+cryptography
+gunicorn
+
+# Google Client Requirements
+oauth2client
+google-api-python-client

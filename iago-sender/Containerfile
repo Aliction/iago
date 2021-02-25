@@ -1,0 +1,14 @@
+FROM registry.redhat.io/ubi8-minimal
+MAINTAINER Aly Ibrahim<aly.ibrahim@gmail.com>
+RUN microdnf update -y
+RUN microdnf install python3.8 -y
+RUN mkdir app
+WORKDIR  /app
+ADD sender.py wsgi-sender.py requirements.txt /app
+RUN pip3 install --upgrade pip
+RUN pip3 install wheel
+RUN pip3 install -r requirements.txt
+RUN pip3 cache purge
+RUN microdnf clean all
+EXPOSE 8080
+ENTRYPOINT ["gunicorn", "--bind", "0.0.0.0:8080", "wsgi-sender:sender"]
