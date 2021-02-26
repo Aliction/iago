@@ -1,3 +1,6 @@
+iago-bot v1.3
+Feature: Allow user to input their Data Range (Sheet) name
+
 iago-bot v1.2
 Use chat service for general chatting
 Change desired Sheet Range from 'Sheet1' to 'Iago'
