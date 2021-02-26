@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum
+from enum import Enum, IntEnum
 
 class Context(Enum):
     """ This is an enumeration class for available contexts during task life cycle"""
@@ -17,7 +17,7 @@ class Type(Enum):
     DRAFT = 2       # user has selected to create drafts and don't send mails
     SEND = 3        # user has selected to create drafts and send them
 
-class Status(Enum):
+class Status(IntEnum):
     """ This is an enumeration class for task status """
     INITIALIZED = 0 # new task is created
     INCOMPLETE = 1  # pre-reqs are not yet collected
@@ -40,7 +40,7 @@ class Task:
         Attribute Total represent the total number of records in the sheet (excluding headers)
         Attributes (rows, drafts, mails) are total numbers for each task action and represent the successful responses only
 """
-    MAX_LIFETIME = 10
+    MAX_LIFETIME = 2
     
     def __init__(self, id, user, sheet_url):
         self._id = id

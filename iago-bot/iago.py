@@ -49,11 +49,16 @@ def collect_missing_input(user):
     return
 
 def process_task(user):
+  if user.task is None:
+    send_message(user, "It's been a while and I totally foget which sheet are you talking about, Can you share it again?")
+    return
   try:
     analyze_input_sheet(user)
   except ValueError:
-    logging.info("Value Error: Data Range")
-  logging.info("A user has triggered a task of type " + str(user.task.type))
+    print("Value Error: Data Range")
+    print("Task Context:", user.task.context)
+#  print(user.email + " has triggered a task of type " + str(user.task.type))
+  print("A user has triggered a task of type " + str(user.task.type))
   if user.task.check_prereqs():
     send_message(user, "Processing the sheet ...")
     if update_sheet(user):
@@ -99,6 +104,9 @@ def handle_card(event):
     action_name = action['actionMethodName']
     user_email = event['user']['email']
     user = get_or_create_user(user_email)
+    if user.task is None:
+#        send_message(user, "It's been a while and I totally foget which sheet are you talking about, Can you share it again?")
+        return { "text" : "Sorry, It's been a while and I totally foget which sheet you are alking about, Can you share it again?" }
     if (action_name == "confirm_subject") or (action_name == "confirm_message"):
         return handle_confirmation(event)
     elif (action_name == "update_sheet") :
@@ -137,7 +145,7 @@ def handle_message(event):
 #      text = {'text' : 'Hello ' + user_first_name + ', send me a sheet to start my work'}
   elif user.task.context == Context.TASK:
       user_first_name = sender['displayName'].split()[0]
-      text = {'text' : 'Hello ' + user_first_name + ', send me a sheet to start my work'}
+      text = {'text' : 'Sorry ' + user_first_name + ', I am still busy with your lastest task, will chat again once done.\nIf you have another task for me just send me the new sheet link.'}
   elif user.task.context == Context.DATA_RANGE:
       user.task.data_range = message
       user.task.context = Context.TASK

@@ -1,4 +1,4 @@
-import re, logging
+import re
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from iago_chat import *
@@ -18,6 +18,9 @@ def analyze_input_sheet(user):
     send_message(user, 'Authorization is successful')
     send_message(user, 'Analyzing the sheet')
   user.task.headers, user.task.data = extract_data(user)
+  lookups = check_lookups(user.task.headers)
+  if len(lookups) > 0:
+    user.task.data = update_data_lookup(lookups, user.task.data)
 
 def extract_data(user):
   sheets_service = build(SHEETS_API, SHEETS_API_VERSION, credentials=user.g_creds, cache_discovery=False)
@@ -41,7 +44,33 @@ def extract_data(user):
       user.task.data_range_check = False
       raise ValueError("Incorrect sheet name " + user.task.data_range) 
     else:
-      logging.info(err)
+      print(err)
+
+def check_lookups(headers):
+    lookups = []
+    for h, header in enumerate(headers):
+        key_value = header.split("_")
+        if len(key_value) == 2 :
+            key = key_value[0]
+            key_id = headers.index(key)
+            value_id = h
+            lookup_dict = dict()
+            lookups.append((key_id, value_id, lookup_dict))
+    return lookups
+
+def update_data_lookup(lookups, data):
+    for lookup in lookups:
+        key_id = lookup[0]
+        value_id = lookup[1]
+        lookup_data = lookup[2]
+        for r, row in enumerate(data):
+            key = row[key_id]
+            value = row[value_id]
+            if lookup_data.get(key) is None and value.strip() != "" :
+                lookup_data[key] = value
+            if value.strip() == "":
+                row[value_id] = lookup_data.get(key)
+    return data
 
 def patternize_headers(headers):
   patterns=[]
@@ -60,8 +89,10 @@ def update_cells_values(cells_values_list, patterns_list):
     for x in range(0, len(cells_values_list)):
         for y in range(0, len(cells_values_list[x])):
           content = cells_values_list[x][y]
-          if compiled_pattern.match(content):
-            value = cells_values_list[x][pattern_ind]
+          if content is not None and compiled_pattern.match(content):
+            value = cells_values_list[x][pattern_ind] 
+            if value is None:
+                value = ""
             cells_values_list[x][y] = content.replace(key, value)
             resultList.append((x, y))
     cells_list.append(resultList)

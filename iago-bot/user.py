@@ -39,6 +39,9 @@ class User:
 
     @property
     def task(self):
+        if self._task is not None:
+            if int(self._task.status) > 2 : # EXPIRED or FINISHED (COMPLETED, PARTIAL, etc..)
+                self._task = None
         return self._task
 
     @task.setter
