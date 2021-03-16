@@ -118,7 +118,7 @@ class Task:
           return self.check_prereqs()
 
     @property
-    def missing_varibales_check(self):
+    def missing_variables_check(self):
         return self._missing_variables_check
 
     @missing_variables_check.setter
