@@ -92,7 +92,7 @@ def check_missing_variables(headers, data):
     for y in range(0, len(data[x])):
       content = data[x][y]
       var = re.findall(compiled_pattern, content)
-      if var is not in headers:
+      if var not in headers:
         missing_variables.append(var)
   return missing_variables
       
