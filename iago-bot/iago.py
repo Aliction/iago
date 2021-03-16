@@ -47,7 +47,7 @@ def collect_missing_input(user):
     user.task.context = Context.MESSAGE
     send_message(user, "What is the email body that you're trying to send?")
     return
-if not user.task.missing_variables_check:
+  if not user.task.missing_variables_check:
     user.task.context = Context.UNKNOWN_VARIABLES
     send_message(user, "I found those unknown variables in your sheet: " + user.task.missing_variables + "\nYou should correct them or remove them from the sheet .. \nDo you want to disable this check for now? Yes/No?")
     return
