@@ -1,3 +1,9 @@
+iago-bot v1.5
+Feature: Warn for un recognized variable (columnNames) are referenced, and gives you the ability to disable this check in the future for the same sheet
+
+iago-bot v1.4
+Feature: Add Embedded lookups (A column name in the form of "PreviousColumn_Column" will be used as a lookup with keys from column "previousColumn")
+
 iago-bot v1.3
 Feature: Allow user to input their Data Range (Sheet) name
 

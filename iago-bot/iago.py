@@ -47,6 +47,10 @@ def collect_missing_input(user):
     user.task.context = Context.MESSAGE
     send_message(user, "What is the email body that you're trying to send?")
     return
+if not user.task.missing_variables_check:
+    user.task.context = Context.UNKNOWN_VARIABLES
+    send_message(user, "I found those unknown variables in your sheet: " + user.task.missing_variables + "\nYou should correct them or remove them from the sheet .. \nDo you want to disable this check for now? Yes/No?")
+    return
 
 def process_task(user):
   if user.task is None:
@@ -146,6 +150,11 @@ def handle_message(event):
   elif user.task.context == Context.TASK:
       user_first_name = sender['displayName'].split()[0]
       text = {'text' : 'Sorry ' + user_first_name + ', I am still busy with your lastest task, will chat again once done.\nIf you have another task for me just send me the new sheet link.'}
+  elif user.task.context == Context.UNKNOWN_VARIABLES:
+      if message.lower == "yes" or message.lower == "y":
+        user.task.skip_check_missing_variables = True
+        text = {'text' : 'Skipping variables check for this sheet ..' }
+      _thread.start_new_thread(process_task,(user,))
   elif user.task.context == Context.DATA_RANGE:
       user.task.data_range = message
       user.task.context = Context.TASK

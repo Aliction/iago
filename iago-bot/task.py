@@ -9,6 +9,7 @@ class Context(Enum):
     MESSAGE = 3     # context about collecting mail message (body)
     ATTACHMENT = 4  # context about collecting attachments, not yet used.
     DATA_RANGE = 5  # context about collecting data range or currently sheet name as our range is the whole sheet.
+    UNKNOWN_VARIABLES = 6  # context about showing variables that couldn't match any of the sheet variables (headers).
 
 class Type(Enum):
     """ This is an enumeration class for task types """
@@ -50,6 +51,9 @@ class Task:
         self._sheet_check = True
         self._data_range = "'Iago'"
         self._data_range_check = True
+        self._missing_variables = None 
+        self._missing_variables_check = True
+        self._skip_check_missing_variables = False
         self._subject = ""
         self._subject_check = False
         self._message = ""
@@ -103,6 +107,35 @@ class Task:
         return self.check_prereqs()
 
     @property
+    def skip_check_missing_varibales(self):
+        return self._skip_check_missing_variables
+
+    @skip_check_missing_variables.setter
+    def skip_check_missing_variables(self, skip_check_missing_variables):
+        self._skip_check_missing_variables = skip_check_missing_variables
+        if skip_check_missing_variables:
+          self._missing_variables_check = True
+          return self.check_prereqs()
+
+    @property
+    def missing_varibales_check(self):
+        return self._missing_variables_check
+
+    @missing_variables_check.setter
+    def missing_variables_check(self, missing_variables_check):
+        self._missing_variables_check = missing_variables_check
+
+    @property
+    def missing_variables(self):
+        return self._missing_variables
+
+    @missing_variables.setter
+    def missing_variables(self, missing_variables):
+        self._missing_variables_check = False
+        self._missing_variables = missing_variables
+        return self.check_prereqs()
+
+    @property
     def subject_check(self):
         return self._subject_check
 
@@ -144,7 +177,7 @@ class Task:
         return True if lifetime > self.MAX_LIFETIME else False
     
     def check_prereqs(self):
-        prereqs_fulfilled = self._sheet_check and self._subject_check and self._message_check and self._data_range_check
+        prereqs_fulfilled = self._sheet_check and self._subject_check and self._message_check and self._data_range_check and self._missing_variables_check
         if(prereqs_fulfilled):
             self.context = Context.TASK
             self._status = Status.INPROGRESS

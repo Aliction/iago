@@ -21,6 +21,11 @@ def analyze_input_sheet(user):
   lookups = check_lookups(user.task.headers)
   if len(lookups) > 0:
     user.task.data = update_data_lookup(lookups, user.task.data)
+  if not user.task.skip_check_missing_variables:
+    unknown_variables = check_missing_variables(user.task.headers, user.task.data)
+    if len(unknown_variables) > 0 :
+      user.task.missing_variables = unknown_variables
+      print("Missing variables found: " + task.missing_variables)
 
 def extract_data(user):
   sheets_service = build(SHEETS_API, SHEETS_API_VERSION, credentials=user.g_creds, cache_discovery=False)
@@ -78,6 +83,20 @@ def patternize_headers(headers):
       pattern = '.*{' + header + '}.*'
       patterns.append(pattern)
   return patterns
+
+def check_missing_variables(headers, data):
+  pattern = "{.*?}"
+  missing_variables = []
+  compiled_pattern = re.compile(pattern, re.DOTALL)
+  for x in range(0, len(data)):
+    for y in range(0, len(data[x]):
+      content = data[x][y]
+      var = re.findall(compiled_pattern, content)
+      if var is not in headers:
+        missing_variables.append(var)
+  return missing_variables
+      
+
 
 def update_cells_values(cells_values_list, patterns_list):
   cells_list = []
