@@ -58,7 +58,7 @@ def process_task(user):
     analyze_input_sheet(user)
   except ValueError:
     print("Value Error: Data Range")
-    print("Task Context:", user.task.context)
+#    print("Task Context:", user.task.context)
 #  print(user.email + " has triggered a task of type " + str(user.task.type))
   print("A user has triggered a task of type " + str(user.task.type))
   if user.task.check_prereqs():
@@ -154,7 +154,6 @@ def handle_message(event):
       else:
         text = {'text' : 'OK, I will keep watching your variables ..' }
       _thread.start_new_thread(process_task,(user,))
-      print(text)
   elif user.task.context == Context.DATA_RANGE:
       user.task.data_range = message
       user.task.context = Context.TASK
@@ -318,7 +317,6 @@ def update_task(user, sheet_url):
     elif user.task.status.value < 3:
         pass
 
-
 def get_user_by_id(user_id):
     for user in USERS:
         if user.id == int(user_id):
@@ -329,9 +327,6 @@ def get_or_create_user(key, platform, chat_room=None):
     user = next((user for user in USERS if user.key == key), None)
     if user is None:
         user = User(len(USERS), key, platform, chat_room)
-        if platform ==Platform.SLACK:
-            email = get_user_email(key)
-            user.add_email(email)
         USERS.append(user)
     return user
 

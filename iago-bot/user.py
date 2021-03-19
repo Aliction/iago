@@ -13,21 +13,17 @@ class User:
     user is not removed once created """
 
     def __init__(self, id, user_key, platform, chat_room=None):
-        print("USER_KEY: ", user_key)
         self._emails = []
         if platform == Platform.GOOGLE:
-            print("User Platform GOOGLE: ", platform)
-            self._emails.append(user_key) #We use Google email as User identifier for Google (different from gid which is used for other authentication later)
+            self._emails.append(user_key)
             self._key = user_key
         elif platform == Platform.SLACK:
-            print("User Platform SLACK: ", platform)
-            self._sid = user_key #We use Slack User ID as User Identifier (We can collect user email and name later)
+            self._sid = user_key
             self._key = self._sid
-        print("User Platform: ", platform)
-        self._id = id # Iago generated ID
+        self._id = id
         self._platform = platform
-        self._gid = None # Google ID
-#        self._sid = None # Slack ID
+        self._gid = None
+        self._sid = None
         self._chat_room = chat_room
         self._creation_date = datetime.now()
         self._task = None
@@ -50,7 +46,6 @@ class User:
         return self._emails
 
     def add_email(self, user_email):
-#        if self._platform == Platform.SLACK :
         self._emails.append(user_email)
         return True
 

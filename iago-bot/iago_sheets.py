@@ -25,7 +25,6 @@ def analyze_input_sheet(user):
     unknown_variables = check_missing_variables(user.task.headers, user.task.data)
     if len(unknown_variables) > 0 :
       user.task.missing_variables = unknown_variables
-      print("Missing variables found: " + str(user.task.missing_variables))
 
 def extract_data(user):
   sheets_service = build(SHEETS_API, SHEETS_API_VERSION, credentials=user.g_creds, cache_discovery=False)

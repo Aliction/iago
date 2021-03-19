@@ -6,7 +6,6 @@ class Slack_Card():
         return menu_blocks
 
     def access_card(auth_uri):
-#        print(auth_uri)
         access_blocks = '[{"type": "section", "block_id": "KLGCq", "text": {"type": "mrkdwn", "text": "Access Required.", "verbatim": False}, "accessory": {"type": "button", "action_id": "grant_access", "text": {"type": "plain_text", "text": "Grant Access", "emoji": True}, "value": "click_me_123", "url": "' + auth_uri + '"}}]'
         return access_blocks
 
@@ -20,7 +19,6 @@ class Slack_Card():
 
 #        mail_blocks_obj = [{"type":"input","element":{"type":"radio_buttons","options":options,"action_id":"mail_selected"},"label":{"type":"plain_text","text":"Select an email","emoji":True}},{"type":"input","element":{"type":"plain_text_input","action_id":"new_mail"},"label":{"type":"plain_text","text":".. Or Enter a new e-mail","emoji":True}}]
         mail_blocks = json.dumps(mail_blocks_obj)
-        print(mail_blocks)
         return mail_blocks
 
     def confirmation(confirmation_question, action_id, message_to_confirm):
