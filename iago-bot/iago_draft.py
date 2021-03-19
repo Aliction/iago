@@ -3,7 +3,6 @@ import requests
 import json
 import _thread
 
-from user import User
 from iago_encrypt import *
 
 draft_service_url = None
@@ -17,8 +16,6 @@ def create_draft(user, row):
     receiver = row[email_index]
     subject = row[subject_index] if subject_index > -1 else user.task.subject
     message = row[message_index] if message_index > -1 else user.task.message
-    #    subject = user.task.subject if user.task.subject_check else row[subject_index]
-    #    message = user.task.message if user.task.message_check else row[message_index]
 
     payload['token'] = encrypt(user.token)
     payload['type'] = 'mail'
@@ -38,8 +35,6 @@ def generate_drafts(user):
   global email_index
   global subject_index
   global message_index
-  #headers = user.task.update_data[0]
-  #rows = user.task.update_data[1:]
   draft_service_url = os.getenv("DRAFT_SERVICE_URL")
   headers = user.task.headers
   rows = user.task.data[1:]

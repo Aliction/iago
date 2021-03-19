@@ -3,7 +3,6 @@ import requests
 import json
 import _thread
 
-from user import User
 from iago_encrypt import *
 
 send_service_url = None

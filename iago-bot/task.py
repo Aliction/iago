@@ -51,7 +51,7 @@ class Task:
         self._sheet_check = True
         self._data_range = "'Iago'"
         self._data_range_check = True
-        self._missing_variables = None 
+        self._missing_variables = None
         self._missing_variables_check = True
         self._skip_check_missing_variables = False
         self._subject = ""
@@ -114,8 +114,8 @@ class Task:
     def skip_check_missing_variables(self, skip_check_missing_variables):
         self._skip_check_missing_variables = skip_check_missing_variables
         if skip_check_missing_variables:
-          self._missing_variables_check = True
-          return self.check_prereqs()
+            self._missing_variables_check = True
+        return self.check_prereqs()
 
     @property
     def missing_variables_check(self):

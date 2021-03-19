@@ -12,7 +12,7 @@ class Card:
             "widgets": [
               {
                 "keyValue": {
-                    "icon" : "EMAIL",
+                  "icon" : "EMAIL",
                   "topLabel": confirmation_item,
                   "content": message_to_confirm
                   }

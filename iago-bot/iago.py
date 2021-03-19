@@ -1,15 +1,13 @@
 import os, re, logging, _thread
-from flask import Flask, request, json, session, redirect, url_for
+from flask import Flask, request, json, session, redirect, url_for, jsonify
 from flask_restful import Resource, reqparse, Api
 import jwt, requests
 
-#from google.oauth2.service_account import Credentials as SACredentials
-#from google.oauth2.credentials import Credentials
-#from googleapiclient.discovery import build
 
-from user import User
+from user import User, Platform
 from task import Task, Type, Context
 from card import Card
+from slack_cards import Slack_Card
 
 from iago_sheets import *
 from iago_chat import *
@@ -82,7 +80,7 @@ def handle_confirmation(event):
     action = event['action']
     action_name = action['actionMethodName']
     user_email = event['user']['email']
-    user = get_or_create_user(user_email)
+    user = get_or_create_user(user_email, Platform.GOOGLE)
     if (action_name == "confirm_subject"):
         parameters = action['parameters']
         if parameters[1]['value'] == "true":
@@ -107,7 +105,7 @@ def handle_card(event):
     action = event['action']
     action_name = action['actionMethodName']
     user_email = event['user']['email']
-    user = get_or_create_user(user_email)
+    user = get_or_create_user(user_email, Platform.GOOGLE)
     if user.task is None:
 #        send_message(user, "It's been a while and I totally foget which sheet are you talking about, Can you share it again?")
         return { "text" : "Sorry, It's been a while and I totally foget which sheet you are alking about, Can you share it again?" }
@@ -116,17 +114,17 @@ def handle_card(event):
     elif (action_name == "update_sheet") :
         user.task.type = Type.RECORD;
         SCOPES = SHEETS_SCOPES
-        auth_uri = ('https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={}&redirect_uri={}&scope={}').format(CLIENT_ID, REDIRECT_URI, SCOPES)
+        auth_uri = ('https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={}&redirect_uri={}&scope={}&state={}').format(CLIENT_ID, REDIRECT_URI, SCOPES, user.id)
         return Card().access_card(auth_uri)
     elif (action_name == "create_drafts") :
         user.task.type = Type.DRAFT;
         SCOPES = DRAFTS_SCOPES
-        auth_uri = ('https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={}&redirect_uri={}&scope={}').format(CLIENT_ID, REDIRECT_URI, SCOPES)
+        auth_uri = ('https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={}&redirect_uri={}&scope={}&state={}').format(CLIENT_ID, REDIRECT_URI, SCOPES, user.id)
         return Card().access_card(auth_uri)
     elif (action_name == "send_emails") :
         user.task.type = Type.SEND;
         SCOPES = SEND_SCOPES
-        auth_uri = ('https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={}&redirect_uri={}&scope={}').format(CLIENT_ID, REDIRECT_URI, SCOPES)
+        auth_uri = ('https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={}&redirect_uri={}&scope={}&state={}').format(CLIENT_ID, REDIRECT_URI, SCOPES, user.id)
         return Card().access_card(auth_uri)
 
 def handle_message(event):
@@ -135,7 +133,7 @@ def handle_message(event):
   google_sheet_pattern=re.compile(".*https:\/\/docs\.google\.com\/spreadsheets\/.*")
   user_email = sender['email']
   user_space_name = event['space']['name']
-  user = get_or_create_user(user_email, user_space_name)
+  user = get_or_create_user(user_email, Platform.GOOGLE, user_space_name)
   sheet_url_list = google_sheet_pattern.findall(message)
   if sheet_url_list:
       user.task = Task(len(TASKS), user.id, sheet_url_list[0])
@@ -146,12 +144,10 @@ def handle_message(event):
       data = json.dumps({ "message": message })
       r = requests.post(CHAT_SERVICE_URL, headers=headers, data=data)
       text = {'text' : json.loads(r.text)['response']}
-#      text = {'text' : 'Hello ' + user_first_name + ', send me a sheet to start my work'}
   elif user.task.context == Context.TASK:
       user_first_name = sender['displayName'].split()[0]
       text = {'text' : 'Sorry ' + user_first_name + ', I am still busy with your lastest task, will chat again once done.\nIf you have another task for me just send me the new sheet link.'}
   elif user.task.context == Context.UNKNOWN_VARIABLES:
-      print(message)
       if message.lower() == "yes" or message.lower() == "y":
         user.task.skip_check_missing_variables = True
         text = {'text' : 'Skipping variables check for this sheet ..' }
@@ -174,8 +170,89 @@ def handle_message(event):
       return Card.confirmation_card("Can you confirm this is your message?", action, confirmation_item, message)
   return text
 
-@iago.route('/',methods=['POST'])
-def on_event():
+@iago.route('/slack/interactive',methods=['POST'])
+def handle_slack_actions():
+    event = request.args.get('payload')
+    payload = json.loads(request.form.get('payload'))
+    user_id = payload['user']['id']
+    channel_id = payload['channel']['id']
+    user = get_or_create_user(user_id, Platform.SLACK, channel_id)
+    action = payload['actions'][0]
+    action_id = action['action_id']
+    if action_id == "task_type":
+      selected_action = payload['actions'][0]['selected_option']['value']
+      if selected_action == "update_sheet":
+        user.task.type = Type.RECORD
+        user.task.scopes = SHEETS_SCOPES
+      elif selected_action == "create_drafts":
+        user.task.type = Type.DRAFT
+        user.task.scopes = DRAFTS_SCOPES
+      elif selected_action == "send_emails":
+        user.task.type = Type.SEND
+        user.task.scopes = SEND_SCOPES
+      user.task.auth_uri = ('https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={}&redirect_uri={}&scope={}&state={}').format(CLIENT_ID, REDIRECT_URI, user.task.scopes, user.id)
+      send_slack_interactive(user, Slack_Card.access_card(user.task.auth_uri))
+    elif action_id == "confirm_subject":
+      selected_action = action['selected_option']['value']
+      if selected_action == "unconfirmed":
+          send_slack(user, "OK, Can you send the Subject again here?")
+      else:    
+          user.task.subject = selected_action 
+          user.task.context = Context.TASK
+          _thread.start_new_thread(process_task,(user,))
+          send_slack(user, "Confirmed")
+    elif action_id == "confirm_message":
+      selected_action = action['selected_option']['value']
+      if selected_action == "unconfirmed":
+        send_slack(user, "OK, Can you send the Subject again here?")
+      else:
+        user.task.message = selected_action
+        user.task.context = Context.TASK
+        _thread.start_new_thread(process_task,(user,))
+        send_slack(user, "Confirmed")
+    return ('', 204)
+
+def handle_slack_message(event):
+  sender = event['user']
+  channel = event['channel']
+  message = event['text']
+  google_sheet_pattern=re.compile(".*https:\/\/docs\.google\.com\/spreadsheets\/.*")
+  user_id = sender
+  user_space_name = channel
+  user = get_or_create_user(user_id, Platform.SLACK, channel)
+  sheet_url_list = google_sheet_pattern.findall(message)
+  if sheet_url_list:
+    user.task = Task(len(TASKS), user.id, sheet_url_list[0])
+    send_slack_interactive(user, Slack_Card.menu())
+  if user.task is None:
+    headers = {'Content-Type': 'application/json'}
+    data = json.dumps({ "message": message })
+    r = requests.post(CHAT_SERVICE_URL, headers=headers, data=data)
+    text = json.loads(r.text)['response']
+    send_message(user, text )
+  elif user.task.context == Context.UNKNOWN_VARIABLES:
+    if message.lower() == "yes" or message.lower() == "y":
+      user.task.skip_check_missing_variables = True
+      send_message(user, 'Skipping variables check for this sheet ..')
+    else:
+      send_message(user, 'OK, I will keep watching for your variable ..' )
+    _thread.start_new_thread(process_task,(user,))
+  elif user.task.context == Context.DATA_RANGE:
+    user.task.data_range = message
+    user.task.context = Context.TASK
+    _thread.start_new_thread(process_task,(user,))
+    send_message(user,  'Checking if we can process with sheet name `' + message + '`' )
+  elif user.task.context == Context.SUBJECT:
+    action = "confirm_subject"
+    confirmation_item = "Subject"
+    send_slack_interactive(user, Slack_Card.confirmation("Can you confirm this is your subject? \n`" + message +"`", action, message))
+  elif user.task.context == Context.MESSAGE:
+    action = "confirm_message"
+    confirmation_item = "Message"
+    send_slack_interactive(user, Slack_Card.confirmation("Can you confirm this is your message? \n```" + message + "```", action, message))
+
+@iago.route('/google',methods=['POST'])
+def on_google_event():
     event = request.get_json()
     sender = event['message']['sender']    
     if event['type'] == 'ADDED_TO_SPACE' and event['space']['singleUserBotDm']:
@@ -187,6 +264,26 @@ def on_event():
         resp = handle_card(event)
     return resp
 
+@iago.route('/slack',methods=['POST'])
+def on_slack_event():
+    event = request.get_json()
+    if 'challenge' in event:
+        return { 'challenge': event['challenge'] }
+    if event['event']['user'] != "U01R3MAGACF":
+        if event['event']['type'] == "message":
+            _thread.start_new_thread(handle_slack_message, (event['event'], ) )
+            return ( '', 204 )
+        elif True:
+            return jsonify({'text': 'OK'})
+        sender = event['message']['sender']
+        if event['type'] == 'ADDED_TO_SPACE' and event['space']['singleUserBotDm']:
+            text = 'Thanks "%s" for your interest in me !' % (user_email if user_email else 'this chat')
+            resp = jsonify({'text': text})
+        elif event['type'] == 'MESSAGE':
+            resp = handle_message(event)
+        elif event['type'] == 'CARD_CLICKED':
+            resp = handle_card(event)
+    return ( '', 204 )
 
 @iago.route('/authorize')
 def authorize():
@@ -194,6 +291,7 @@ def authorize():
     return {'AUTHORIZED' : False}
   else:
     auth_code = request.args.get('code')
+    user_id = request.args.get('state')
     data = {'code': auth_code,
             'client_id': CLIENT_ID,
             'client_secret': CLIENT_SECRET,
@@ -201,7 +299,7 @@ def authorize():
             'grant_type': 'authorization_code'}
     r = requests.post('https://oauth2.googleapis.com/token', data=data)
     id_token = r.json()['id_token']
-    user = get_user_from_token(id_token)
+    user = get_user_by_id(user_id)
     tmp_tkn = None
     tmp_tkn = r.json()['access_token']
     if tmp_tkn is None:
@@ -221,23 +319,22 @@ def update_task(user, sheet_url):
         pass
 
 
+def get_user_by_id(user_id):
+    for user in USERS:
+        if user.id == int(user_id):
+            return user
+    return None
 
-def get_or_create_user(email, space_name=None):
-    user = next((user for user in USERS if user.email == email), None)
+def get_or_create_user(key, platform, chat_room=None):
+    user = next((user for user in USERS if user.key == key), None)
     if user is None:
-        user = User(len(USERS), email)
+        user = User(len(USERS), key, platform, chat_room)
+        if platform ==Platform.SLACK:
+            email = get_user_email(key)
+            user.add_email(email)
         USERS.append(user)
-    if space_name is not None:
-        user.space = space_name
     return user
 
-def get_user_from_token(id_token):
-    user_data = jwt.decode(id_token, options={"verify_signature" : False})
-    gid = user_data['sub']
-    email = user_data['email']
-    user = get_or_create_user(email)
-    user.gid = gid
-    return user
 
 def load_creds():
   global CLIENT_ID
@@ -278,7 +375,8 @@ iago.secret_key = str(uuid.uuid4())
 USERS = []
 TASKS = []
 load_creds()
-iago_login()
+google_login()
+slack_login()
 #iago.debug = True
 #iago.run(port=5000)
 

@@ -1,20 +1,43 @@
 from google.oauth2.service_account import Credentials as SACredentials
 from googleapiclient.discovery import build
-#import logging
-#logging.getLogger('googleapicliet.discovery_cache').setLevel(logging.ERROR)
+import requests
+import json
+import os
 
 CHAT = None
+TOKEN = None
 
-def iago_login():
+def google_login():
   global CHAT
   scopes = ['https://www.googleapis.com/auth/chat.bot']
-#  bot_credentials, project_id = google.auth.default()
-#  bot_credentials = credentials.with_scopes(scopes=scopes)
-#  bot_credentials, project_id = laod_credentials_from_file('chat_secret.json')
   bot_credentials = SACredentials.from_service_account_file('chat_secret.json', scopes=scopes)
-#  CHAT = build('chat', 'v1', credentials=bot_credentials) #Was working and all of sudden threw File_cache not found#  This solution disable cache is proposed here: https://github.com/googleapis/google-api-python-client/issues/427
   CHAT = build('chat', 'v1', credentials=bot_credentials, cache_discovery=False)
 
+def slack_login():
+    global TOKEN
+    TOKEN = os.getenv('SLACK_TOKEN')
+
 def send_message(user, message):
+    if user.platform == 0:
+        send_google(user, message)
+    elif user.platform == 1:
+        send_slack(user, message)
+
+def send_google(user, message):
     body = {'text': message}
-    CHAT.spaces().messages().create(parent=user.space, body=body).execute()
+    CHAT.spaces().messages().create(parent=user.chat_room, body=body).execute()
+
+def send_slack(user, message):
+    url = "https://slack.com/api/chat.postMessage"
+    headers = { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json'}
+    body = json.dumps({ 'channel': user.chat_room, 'text': message })
+    resp =requests.post(url=url, data=body, headers=headers)
+    
+def send_slack_interactive(user, blocks):
+    url = "https://slack.com/api/chat.postMessage"
+    token = "xoxb-1892106908128-1853724554423-A0ENaUOebrwuWlGcpVrbPJkh"
+    headers = { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json'}
+    print(blocks)
+    body = json.dumps({ 'channel': user.chat_room, 'blocks': blocks })
+    resp =requests.post(url=url, data=body, headers=headers)
+
