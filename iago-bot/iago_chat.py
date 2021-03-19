@@ -35,7 +35,6 @@ def send_slack(user, message):
     
 def send_slack_interactive(user, blocks):
     url = "https://slack.com/api/chat.postMessage"
-    token = "xoxb-1892106908128-1853724554423-A0ENaUOebrwuWlGcpVrbPJkh"
     headers = { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json'}
     body = json.dumps({ 'channel': user.chat_room, 'blocks': blocks })
     resp =requests.post(url=url, data=body, headers=headers)
