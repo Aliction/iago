@@ -1,6 +1,11 @@
 # Iago - Email Messaging Automated System
 Iago is a Google Chatbot that allows users to customize and send emails from inputted data from a Google Spreadsheet.
 
+## Supportability
+Currently, Iago is supported on: 
+1. Google Chat 
+2. Slack 
+
 ## To get started
 1. Create a Google Spreadsheet and label the active tab as "Iago" - this is required or the bot will not locate the inputted data.
 
