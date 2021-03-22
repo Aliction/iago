@@ -9,7 +9,7 @@ Currently, Iago is supported on:
 ## To get started
 1. Create a Google Spreadsheet and label the active tab as "Iago" - this is required or the bot will not locate the inputted data.
 
-3. List customer info and other necessary input data (variables) as column headers. Then insert the necessary customer and event details under. Here is a [template file](https://events.redhat.com/profile/form/index.cfm?PKformID=0x336358abcd) that can be used as an example.
+3. List customer info and other necessary input data (variables) as column headers. Then insert the necessary customer and event details under. Here is a [template file](https://docs.google.com/spreadsheets/d/1MCf0II8vDfDoyAFzf-sdLgYkJj_P8AU9-GMAQC16zpg/edit?usp=sharing) that can be used as an example.
 
 4. Open Google Chat and open the message window for the Iago Bot. Input the link to the Google spreadsheet.
 
