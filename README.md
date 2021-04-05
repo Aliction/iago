@@ -34,4 +34,4 @@ Currently, Iago is supported on:
     I created the required draft e-mails
     ```
 
-    In your corresponding Gmail account, check your Drafts folder to verify the emails were generated:
+    In your corresponding Gmail account, check your Drafts folder to verify the emails were generated.
