@@ -6,7 +6,7 @@ Currently, Iago is supported on:
 1. Google Chat 
 2. Slack 
 
-## To get started
+## Quickstart of Iago
 1. Create a Google Spreadsheet and label the active tab as "Iago" - this is required or the bot will not locate the inputted data.
 
 3. List customer info and other necessary input data (variables) as column headers. Then insert the necessary customer and event details under. Here is a [template file](https://docs.google.com/spreadsheets/d/1MCf0II8vDfDoyAFzf-sdLgYkJj_P8AU9-GMAQC16zpg/edit?usp=sharing) that can be used as an example.
@@ -36,7 +36,9 @@ Currently, Iago is supported on:
 
     In your corresponding Gmail account, check your Drafts folder to verify the emails were generated.
 
-## To submit bugs/enhancements
+## Advanced Uses of Iago 
+
+## To Submit Bugs/Enhancements
 
 If you run into any issues while using the tooling, you can submit a ticket to the author of the tool directly to GitHub:
 ```https://github.com/AlyIbrahim/iago/issues```
