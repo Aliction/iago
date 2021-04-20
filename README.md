@@ -7,11 +7,15 @@ Currently, Iago is supported on:
 2. Slack 
 
 ## Quickstart 
-1. Create a Google Spreadsheet and label the active tab as "Iago" - this is required or the bot will not locate the inputted data.
+1. Create a Google Spreadsheet and label the active tab as "Iago" - this is required or the bot will not locate the inputted data. Here is a [template file](https://docs.google.com/spreadsheets/d/1MCf0II8vDfDoyAFzf-sdLgYkJj_P8AU9-GMAQC16zpg/edit?usp=sharing) that can be used as an example.
 
-3. List customer info and other necessary input data (variables) as column headers. Then insert the necessary customer and event details under. Here is a [template file](https://docs.google.com/spreadsheets/d/1MCf0II8vDfDoyAFzf-sdLgYkJj_P8AU9-GMAQC16zpg/edit?usp=sharing) that can be used as an example.
+3. List customer info and other necessary input data (variables) as column headers. Then insert the necessary customer and event details under. 
 
-4. Open Google Chat and open the message window for the Iago Bot. Input the link to the Google spreadsheet.
+4. There are two required columns: Subject, Message. This is where you want to draft your email subject and email subjects using the variables defined. 
+
+    For example, you can draft your email subject saying "Have you registered for Red Hat Summit 2021 yet {First Name}?" and it calls the variables defined for your customer information (in this case, {First Name}).
+
+5. Open Google Chat and open the message window for the Iago Bot. Input the URL link to the Google spreadsheet.
 
   Iago will ask if you want to:
 
