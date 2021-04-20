@@ -40,4 +40,4 @@ Currently, Iago is supported on:
 ## To submit bugs/enhancements
 
 If you run into any issues while using the tooling, you can submit a ticket to the author of the tool directly to GitHub:
-```https://github.com/AlyIbrahim/iago/issues```
+[https://github.com/AlyIbrahim/iago/issues](https://github.com/AlyIbrahim/iago/issues)
